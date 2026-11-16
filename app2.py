@@ -1,4 +1,5 @@
 import csv
+import math
 import sys
 from pathlib import Path
 
@@ -97,15 +98,35 @@ class RainfallComparisonApp(QMainWindow):
 
         self.figure.clear()
         axis = self.figure.add_subplot(111)
-        if selected_data:
-            axis.plot(
-                months,
+        positions = list(range(len(months)))
+        if selected_data and reference_data:
+            bar_width = 0.4
+            axis.bar(
+                [position - bar_width / 2 for position in positions],
                 [selected_data[month] for month in months],
-                marker="o",
+                bar_width,
                 label="Loaded data",
             )
-        if reference_data:
-            axis.plot(months, reference_values, marker="o", label="Tel Aviv reference")
+            axis.bar(
+                [position + bar_width / 2 for position in positions],
+                [
+                    value if value is not None else math.nan
+                    for value in reference_values
+                ],
+                bar_width,
+                label="Tel Aviv reference",
+            )
+        elif selected_data:
+            axis.bar(
+                positions,
+                [selected_data[month] for month in months],
+                0.7,
+                label="Loaded data",
+            )
+        elif reference_data:
+            axis.bar(positions, reference_values, 0.7, label="Tel Aviv reference")
+        if positions:
+            axis.set_xticks(positions, months)
         if not selected_data and not reference_data:
             axis.text(
                 0.5,
