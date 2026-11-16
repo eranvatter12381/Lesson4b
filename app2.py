@@ -3,7 +3,10 @@ import math
 import sys
 from pathlib import Path
 
-from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qtagg import (
+    FigureCanvasQTAgg,
+    NavigationToolbar2QT,
+)
 from matplotlib.figure import Figure
 from PySide6.QtWidgets import (
     QApplication,
@@ -28,10 +31,12 @@ class RainfallComparisonApp(QMainWindow):
 
         self.figure = Figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
 
         layout = QVBoxLayout()
         layout.addWidget(self.load_button)
         layout.addWidget(self.canvas)
+        layout.addWidget(self.toolbar)
 
         central_widget = QWidget()
         central_widget.setLayout(layout)
@@ -98,6 +103,8 @@ class RainfallComparisonApp(QMainWindow):
 
         self.figure.clear()
         axis = self.figure.add_subplot(111)
+        self.figure.set_facecolor("#f4f6f8")
+        axis.set_facecolor("#ffffff")
         positions = list(range(len(months)))
         if selected_data and reference_data:
             bar_width = 0.4
@@ -105,6 +112,7 @@ class RainfallComparisonApp(QMainWindow):
                 [position - bar_width / 2 for position in positions],
                 [selected_data[month] for month in months],
                 bar_width,
+                color="#3572a5",
                 label="Loaded data",
             )
             axis.bar(
@@ -114,6 +122,7 @@ class RainfallComparisonApp(QMainWindow):
                     for value in reference_values
                 ],
                 bar_width,
+                color="#e08b36",
                 label="Tel Aviv reference",
             )
         elif selected_data:
@@ -121,10 +130,17 @@ class RainfallComparisonApp(QMainWindow):
                 positions,
                 [selected_data[month] for month in months],
                 0.7,
+                color="#3572a5",
                 label="Loaded data",
             )
         elif reference_data:
-            axis.bar(positions, reference_values, 0.7, label="Tel Aviv reference")
+            axis.bar(
+                positions,
+                reference_values,
+                0.7,
+                color="#e08b36",
+                label="Tel Aviv reference",
+            )
         if positions:
             axis.set_xticks(positions, months)
         if not selected_data and not reference_data:
@@ -137,13 +153,20 @@ class RainfallComparisonApp(QMainWindow):
                 transform=axis.transAxes,
             )
         axis.set_title(
-            "Monthly Rainfall Comparison" if selected_data else "Monthly Rainfall"
+            "Monthly Rainfall Comparison" if selected_data else "Monthly Rainfall",
+            fontsize=14,
+            fontweight="bold",
+            pad=14,
         )
-        axis.set_xlabel("Month")
-        axis.set_ylabel("Rainfall (mm)")
-        axis.grid(True, alpha=0.3)
-        if axis.lines:
-            axis.legend()
+        axis.set_xlabel("Month", labelpad=8)
+        axis.set_ylabel("Rainfall (mm)", labelpad=8)
+        axis.set_axisbelow(True)
+        axis.grid(axis="y", linestyle="--", linewidth=0.7, alpha=0.35)
+        axis.spines["top"].set_visible(False)
+        axis.spines["right"].set_visible(False)
+        axis.margins(y=0.12)
+        if axis.containers:
+            axis.legend(frameon=False)
         self.figure.tight_layout()
         self.canvas.draw()
 
